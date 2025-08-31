@@ -1,0 +1,35 @@
+name: Stock Screener Bot
+
+on:
+  schedule:
+    - cron: "0 21 * * *"   # 매일 06:00 KST (UTC+9 → 21:00 UTC)
+  workflow_dispatch:       # 수동 실행 버튼
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run screener
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # 필요 시 아래 파라미터도 비밀변수나 plain env로 조정 가능
+          MIN_MARKET_CAP: "20000000000"   # 20B
+          MIN_AVG_VOLUME: "1000000"       # 1M
+          HISTORY_PERIOD: "6mo"
+          HISTORY_INTERVAL: "1d"
+        run: python screener.py
