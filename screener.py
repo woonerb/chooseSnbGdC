@@ -46,26 +46,22 @@ def send_telegram_message(token: str, chat_id: str, text: str):
 # -----------------------------
 # 티커 수집 (위키백과)
 # -----------------------------
-def get_sp500_tickers() -> list[str]:
+def get_sp500_tickers():
     url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-    tables = pd.read_html(url)
-    for t in tables:
-        cols = {c.lower() for c in t.columns}
-        if "symbol" in cols:
-            return [yahoo_symbol_fix(x) for x in t["Symbol"].dropna().tolist()]
-    raise RuntimeError("S&P 500 테이블을 찾지 못했습니다.")
+    headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"}
+    html = requests.get(url, headers=headers).text
+    tables = pd.read_html(html)
+    sp500_table = tables[0]
+    return sp500_table['Symbol'].tolist()
 
-def get_nasdaq100_tickers() -> list[str]:
-    url = "https://en.wikipedia.org/wiki/Nasdaq-100"
-    tables = pd.read_html(url)
-    # 페이지 구조가 바뀌면 'Ticker' 또는 'Symbol' 컬럼을 찾는다
-    for t in tables:
-        lower = {c.lower() for c in t.columns}
-        if "ticker" in lower:
-            return [yahoo_symbol_fix(x) for x in t[[c for c in t.columns if c.lower()=="ticker"][0]].dropna().tolist()]
-        if "symbol" in lower:
-            return [yahoo_symbol_fix(x) for x in t[[c for c in t.columns if c.lower()=="symbol"][0]].dropna().tolist()]
-    raise RuntimeError("Nasdaq-100 테이블을 찾지 못했습니다.")
+def get_nasdaq100_tickers():
+    url = "https://en.wikipedia.org/wiki/NASDAQ-100"
+    headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"}
+    html = requests.get(url, headers=headers).text
+    tables = pd.read_html(html)
+    # NASDAQ-100 페이지의 첫 번째 표에 기업 리스트 있음
+    nasdaq100_table = tables[3]  # 간혹 인덱스가 바뀔 수 있어서 확인 필요
+    return nasdaq100_table['Ticker'].tolist()
 
 # -----------------------------
 # 단일 티커 스크리닝
