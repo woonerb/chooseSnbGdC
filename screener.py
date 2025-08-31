@@ -125,8 +125,8 @@ def screen_one(ticker: str):
         last = df.iloc[-1]
         cond1 = last["Close"] <= last["bb_low"]          # 볼린저 하단
         cond2 = last["Close"] > last["ma60"]             # 60일선 위
-        cond3 = last["rsi"] < 35                         # 과매도
-        cond4 = (last["macd"] > last["signal"])          # MACD 골든
+        #cond3 = last["rsi"] < 35                         # 과매도
+        #cond4 = (last["macd"] > last["signal"])          # MACD 골든
 
         if cond1 and cond2 and (cond3 or cond4):
             return {
