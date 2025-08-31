@@ -8,6 +8,7 @@ import yfinance as yf
 import ta
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from io import StringIO
 
 # -----------------------------
 # 설정 (환경변수로 덮어쓰기 가능)
@@ -50,7 +51,7 @@ def get_sp500_tickers():
     url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
     headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"}
     html = requests.get(url, headers=headers).text
-    tables = pd.read_html(html)
+    tables = pd.read_html(StringIO(html))
     sp500_table = tables[0]
     return sp500_table['Symbol'].tolist()
 
@@ -58,11 +59,17 @@ def get_nasdaq100_tickers():
     url = "https://en.wikipedia.org/wiki/NASDAQ-100"
     headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"}
     html = requests.get(url, headers=headers).text
-    tables = pd.read_html(html)
-    # NASDAQ-100 페이지의 첫 번째 표에 기업 리스트 있음
-    nasdaq100_table = tables[3]  # 간혹 인덱스가 바뀔 수 있어서 확인 필요
-    return nasdaq100_table['Ticker'].tolist()
-
+    tables = pd.read_html(StringIO(html))
+    # NASDAQ100 표 찾기
+    for table in tables:
+        cols = [c.lower() for c in table.columns.astype(str)]
+        if any("ticker" in c or "symbol" in c for c in cols):
+            # 컬럼명 찾기
+            for col in table.columns:
+                if "Ticker" in col or "Symbol" in col:
+                    return table[col].tolist()
+    raise ValueError("NASDAQ-100 ticker table not found")
+    
 # -----------------------------
 # 단일 티커 스크리닝
 # -----------------------------
